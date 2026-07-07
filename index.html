@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIZZE · 产品系列 Product Range</title>
+<style>
+  :root{--ink:#2a2723;--paper:#f7f5f1;--line:#d9d4cb}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--paper);color:var(--ink);
+    font-family:Georgia,'Times New Roman',ui-serif,serif;
+    -webkit-font-smoothing:antialiased}
+  header{text-align:center;padding:38px 20px 26px}
+  .brand{font-size:34px;letter-spacing:.42em;text-indent:.42em}
+  .brand-sub{margin-top:8px;font-size:12px;letter-spacing:.28em;text-indent:.28em;
+    color:#8a8378;text-transform:uppercase}
+  .rule{width:56px;height:1px;background:var(--line);margin:22px auto 0}
+  main{max-width:980px;margin:0 auto;padding:0 14px 20px}
+  figure{margin:26px 0 0;background:#fff;border:1px solid var(--line);
+    border-radius:4px;overflow:hidden}
+  figure img{display:block;width:100%;height:auto}
+  .status{text-align:center;padding:60px 20px;color:#8a8378;
+    font-size:14px;letter-spacing:.08em}
+  footer{text-align:center;padding:30px 20px 44px;
+    font-size:11px;letter-spacing:.18em;color:#a09a8f;text-transform:uppercase}
+  @media (min-width:720px){.brand{font-size:42px}main{padding:0 24px 30px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">LIZZE</div>
+  <div class="brand-sub">nature &amp; innovations</div>
+  <div class="rule"></div>
+</header>
+<main id="gallery"><div class="status">加载中 Loading…</div></main>
+<footer>For Professional Salon Only · Formulated in Italy</footer>
+
+<script>
+(function () {
+  var OWNER = "sherlockedjim";
+  var REPO  = "lizze.github.io";
+  var DIR   = "images";
+  var EXT   = /\.(jpe?g|png|webp|gif)$/i;
+  var gallery = document.getElementById("gallery");
+
+  function show(list) {
+    gallery.innerHTML = "";
+    list.forEach(function (url) {
+      var fig = document.createElement("figure");
+      var img = document.createElement("img");
+      img.src = url;
+      img.alt = "Lizze product";
+      img.loading = "lazy";
+      fig.appendChild(img);
+      gallery.appendChild(fig);
+    });
+  }
+
+  function fail(msg) {
+    gallery.innerHTML = '<div class="status">' + msg + "</div>";
+  }
+
+  // 方案一：GitHub API 自动列出 images 文件夹里的全部图片
+  fetch("https://api.github.com/repos/" + OWNER + "/" + REPO + "/contents/" + DIR)
+    .then(function (r) { if (!r.ok) throw 0; return r.json(); })
+    .then(function (files) {
+      var urls = files
+        .filter(function (f) { return f.type === "file" && EXT.test(f.name); })
+        .sort(function (a, b) { return a.name.localeCompare(b.name); })
+        .map(function (f) { return f.download_url; });
+      if (!urls.length) throw 0;
+      show(urls);
+    })
+    .catch(function () {
+      // 方案二（兜底）：按 1.jpg、2.jpg… 顺序探测本地文件
+      var found = [], i = 1;
+      function probe() {
+        if (i > 50) {
+          return found.length ? show(found)
+            : fail("暂无图片，请稍后再试 / No images yet");
+        }
+        var t = new Image();
+        var src = DIR + "/" + i + ".jpg";
+        t.onload = function () { found.push(src); i++; probe(); };
+        t.onerror = function () { found.length ? show(found)
+          : fail("暂无图片，请稍后再试 / No images yet"); };
+        t.src = src;
+      }
+      probe();
+    });
+})();
+</script>
+</body>
+</html>
